@@ -1,0 +1,65 @@
+version: '3.7'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.24.1
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - '9090:9090'
+
+  grafana:
+    image: grafana/grafana:7.3.7
+    container_name: grafana
+    ports:
+      - '3000:3000'
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - '8080:8080'
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/rootfs:ro
+    ports:
+      - '9100:9100'
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+)($|/)'
+    restart: unless-stopped
+
+  # --- O serviço 'debian_test' foi ajustado com a Opção 2 ---
+  debian_test:
+    build:
+      context: .
+      dockerfile: Dockerfile.debian
+    container_name: debian_test
+    ports:
+      - '9101:9100'
+    restart: unless-stopped
+    command: ["stress-ng", "--cpu", "1", "--vm", "1", "--vm-bytes", "1G", "--timeout", "60s"]
+    
+  # --- O serviço 'ubuntu_test' foi ajustado com a Opção 2 ---
+  ubuntu_test:
+    build:
+      context: .
+      dockerfile: Dockerfile.ubuntu
+    container_name: ubuntu_test
+    ports:
+      - '9102:9100'
+    restart: unless-stopped
+    command: ["stress-ng", "--cpu", "1", "--vm", "1", "--vm-bytes", "1G", "--timeout", "60s"]

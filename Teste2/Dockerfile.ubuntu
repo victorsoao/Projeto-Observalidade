@@ -1,0 +1,18 @@
+# Baseia-se na imagem oficial do Ubuntu
+FROM ubuntu:latest
+
+# Instala todas as dependências em um único comando RUN
+RUN apt-get update && \
+    apt-get install -y wget tar stress-ng && \
+    rm -rf /var/lib/apt/lists/*
+
+# Baixa e move o binário do Node Exporter
+RUN wget https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz && \
+    tar xvfz node_exporter-1.7.0.linux-amd64.tar.gz && \
+    mv node_exporter-1.7.0.linux-amd64/node_exporter /usr/local/bin/
+
+# Limpa os arquivos de instalação para reduzir o tamanho da imagem
+RUN rm -rf /tmp/* /var/tmp/*
+
+# Define o comando que o contêiner irá executar ao ser iniciado
+CMD ["node_exporter"]
