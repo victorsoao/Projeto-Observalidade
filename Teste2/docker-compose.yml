@@ -8,12 +8,16 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - '9090:9090'
+    networks:
+      - monitoramento_rede
 
   grafana:
     image: grafana/grafana:7.3.7
     container_name: grafana
     ports:
       - '3000:3000'
+    networks:
+      - monitoramento_rede
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.0
@@ -26,6 +30,8 @@ services:
     ports:
       - '8080:8080'
     restart: unless-stopped
+    networks:
+      - monitoramento_rede
 
   node-exporter:
     image: prom/node-exporter:v1.7.0
@@ -41,8 +47,10 @@ services:
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+)($|/)'
     restart: unless-stopped
+    networks:
+      - monitoramento_rede
 
-  # --- O serviço 'debian_test' foi ajustado com a Opção 2 ---
+  # --- O serviço 'debian_test' foi ajustado com IP fixo ---
   debian_test:
     build:
       context: .
@@ -51,9 +59,11 @@ services:
     ports:
       - '9101:9100'
     restart: unless-stopped
-    command: ["stress-ng", "--cpu", "1", "--vm", "1", "--vm-bytes", "1G", "--timeout", "60s"]
+    networks:
+      monitoramento_rede:
+        ipv4_address: 172.28.0.7
     
-  # --- O serviço 'ubuntu_test' foi ajustado com a Opção 2 ---
+  # --- O serviço 'ubuntu_test' foi ajustado com IP fixo ---
   ubuntu_test:
     build:
       context: .
@@ -62,4 +72,14 @@ services:
     ports:
       - '9102:9100'
     restart: unless-stopped
-    command: ["stress-ng", "--cpu", "1", "--vm", "1", "--vm-bytes", "1G", "--timeout", "60s"]
+    networks:
+      monitoramento_rede:
+        ipv4_address: 172.28.0.3
+
+# --- Definição da rede personalizada ---
+networks:
+  monitoramento_rede:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
