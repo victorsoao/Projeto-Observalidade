@@ -19,6 +19,7 @@ Este projeto tem como objetivo implementar uma solução de monitoramento eficie
 Clone o repositório:
 
 git clone https://github.com/seu-usuario/monitoramento-prometheus-grafana.git
+
 cd monitoramento-prometheus-grafana
 
 Inicie os serviços com Docker Compose:
