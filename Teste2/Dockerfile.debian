@@ -1,10 +1,8 @@
 # Baseia-se na imagem oficial do Debian
 FROM debian:latest
 
-# Instala todas as dependências em uma única instrução RUN
-RUN apt-get update && \
-    apt-get install -y wget tar stress-ng && \
-    rm -rf /var/lib/apt/lists/*
+# Instala as ferramentas necessárias para baixar e extrair o Node Exporter
+RUN apt-get update && apt-get install -y wget tar
 
 # Baixa e move o binário do Node Exporter
 RUN wget https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz && \
@@ -12,7 +10,7 @@ RUN wget https://github.com/prometheus/node_exporter/releases/download/v1.7.0/no
     mv node_exporter-1.7.0.linux-amd64/node_exporter /usr/local/bin/
 
 # Limpa os arquivos de instalação para reduzir o tamanho da imagem
-RUN rm -rf /tmp/* /var/tmp/*
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Define o comando que o contêiner irá executar ao ser iniciado
 CMD ["node_exporter"]
