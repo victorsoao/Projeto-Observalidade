@@ -1,16 +1,43 @@
-# Baseia-se na imagem oficial do Debian
-FROM debian:latest
+FROM debian:bullseye-slim
 
-# Instala as ferramentas necessárias para baixar e extrair o Node Exporter
-RUN apt-get update && apt-get install -y wget tar
+# Instalar dependências
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    procps \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Baixa e move o binário do Node Exporter
-RUN wget https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz && \
-    tar xvfz node_exporter-1.7.0.linux-amd64.tar.gz && \
-    mv node_exporter-1.7.0.linux-amd64/node_exporter /usr/local/bin/
+# Instalar Node Exporter
+RUN wget https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz \
+    && tar xvfz node_exporter-1.7.0.linux-amd64.tar.gz \
+    && mv node_exporter-1.7.0.linux-amd64/node_exporter /usr/local/bin/ \
+    && rm -rf node_exporter-1.7.0.linux-amd64*
 
-# Limpa os arquivos de instalação para reduzir o tamanho da imagem
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Instalar OpenTelemetry Python SDK
+RUN pip3 install \
+    opentelemetry-api \
+    opentelemetry-sdk \
+    opentelemetry-exporter-otlp-proto-http \
+    opentelemetry-instrumentation \
+    opentelemetry-instrumentation-system-metrics \
+    psutil
 
-# Define o comando que o contêiner irá executar ao ser iniciado
-CMD ["node_exporter"]
+# Copiar script de monitoramento OpenTelemetry
+COPY otel_monitor.py /usr/local/bin/otel_monitor.py
+RUN chmod +x /usr/local/bin/otel_monitor.py
+
+# Copiar script de inicialização
+COPY start_debian.sh /usr/local/bin/start_debian.sh
+RUN chmod +x /usr/local/bin/start_debian.sh
+
+# Variáveis de ambiente OpenTelemetry
+ENV OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
+ENV OTEL_LOGS_EXPORTER=otlp
+ENV OTEL_METRICS_EXPORTER=otlp
+ENV OTEL_TRACES_EXPORTER=otlp
+
+EXPOSE 9100
+
+CMD ["/usr/local/bin/start_debian.sh"]
