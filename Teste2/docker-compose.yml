@@ -1,6 +1,36 @@
 version: '3.7'
 
 services:
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    hostname: otel-collector
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "8889:8889"   # Prometheus metrics endpoint
+      - "13133:13133" # health check
+    networks:
+      - monitoramento_rede
+    restart: unless-stopped
+
+  # Jaeger para tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "14250:14250" # gRPC
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - monitoramento_rede
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:v2.24.1
     container_name: prometheus
@@ -16,6 +46,11 @@ services:
     container_name: grafana
     ports:
       - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - monitoramento_rede
 
@@ -50,7 +85,7 @@ services:
     networks:
       - monitoramento_rede
 
-  # --- O serviço 'debian_test' foi ajustado com IP fixo ---
+  # Container Debian com OpenTelemetry
   debian_test:
     build:
       context: .
@@ -58,12 +93,19 @@ services:
     container_name: debian_test
     ports:
       - '9101:9100'
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_SERVICE_NAME=debian-service
+      - OTEL_SERVICE_VERSION=1.0.0
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=debian-service,service.version=1.0.0,deployment.environment=production
     restart: unless-stopped
     networks:
       monitoramento_rede:
-        ipv4_address: 172.28.0.7
+        ipv4_address: 172.28.0.10
+    depends_on:
+      - otel-collector
     
-  # --- O serviço 'ubuntu_test' foi ajustado com IP fixo ---
+  # Container Ubuntu com OpenTelemetry
   ubuntu_test:
     build:
       context: .
@@ -71,12 +113,21 @@ services:
     container_name: ubuntu_test
     ports:
       - '9102:9100'
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_SERVICE_NAME=ubuntu-service
+      - OTEL_SERVICE_VERSION=1.0.0
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=ubuntu-service,service.version=1.0.0,deployment.environment=production
     restart: unless-stopped
     networks:
       monitoramento_rede:
+
+        ipv4_address: 172.28.0.20
+    depends_on:
+      - otel-collector
+
         ipv4_address: 172.28.0.8
 
-# --- Definição da rede personalizada ---
 networks:
   monitoramento_rede:
     driver: bridge

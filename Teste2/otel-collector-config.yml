@@ -1,0 +1,134 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        
+  # Prometheus receiver para coletar métricas dos exporters
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 10s
+          static_configs:
+            - targets: ['0.0.0.0:8889']
+        - job_name: 'cadvisor'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['cadvisor:8080']
+        - job_name: 'node-exporter'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['node-exporter:9100']
+        - job_name: 'debian-node-exporter'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['172.28.0.10:9100']
+        - job_name: 'ubuntu-node-exporter'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['172.28.0.20:9100']
+
+  # Host metrics receiver
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
+      disk:
+      filesystem:
+      load:
+      memory:
+      network:
+      paging:
+      processes:
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    
+  memory_limiter:
+    limit_mib: 400
+    check_interval: 1s
+    
+  # Resource processor para adicionar atributos
+  resource:
+    attributes:
+      - key: environment
+        value: "production"
+        action: insert
+      - key: collector.version
+        value: "latest"
+        action: insert
+
+  # Attributes processor para transformar dados
+  attributes:
+    actions:
+      - key: container.name
+        action: insert
+        from_attribute: service.name
+
+exporters:
+  # Exportar para Prometheus
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    metric_expiration: 180m
+    resource_to_telemetry_conversion:
+      enabled: true
+
+  # Exportar traces para Jaeger via OTLP
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  # Debug exporter (substituiu o logging)
+  debug:
+    verbosity: detailed
+    
+  # OTLP exporter genérico
+  otlp:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  pprof:
+    endpoint: 0.0.0.0:1777
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+  pipelines:
+    # Pipeline para métricas
+    metrics:
+      receivers: [otlp, prometheus, hostmetrics]
+      processors: [memory_limiter, batch, resource, attributes]
+      exporters: [prometheus, debug]
+    
+    # Pipeline para traces
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [otlp/jaeger, debug]
+    
+    # Pipeline para logs
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [debug]
+
+  telemetry:
+    logs:
+      level: "info"
+    metrics:
+      level: "detailed"
