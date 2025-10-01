@@ -41,7 +41,7 @@ class SystemMonitor:
         })
         
         # Configurar exporters
-        otlp_endpoint = os.getenv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://otel-collector:4318')
+        otlp_endpoint = os.getenv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://172.28.0.40:4318') # <--- MODIFICADO
         
         # Configurar trace provider
         trace.set_tracer_provider(TracerProvider(resource=self.resource))

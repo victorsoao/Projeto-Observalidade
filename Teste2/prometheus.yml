@@ -26,7 +26,7 @@ scrape_configs:
   # Adicionar OpenTelemetry Collector como fonte de métricas
   - job_name: 'otel-collector'
     static_configs:
-      - targets: ['otel-collector:8889']
+      - targets: ['172.28.0.40:8889'] # <--- MODIFICADO
     scrape_interval: 10s
 
   # Jaeger metrics (se disponível)

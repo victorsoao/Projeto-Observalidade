@@ -1,12 +1,17 @@
 FROM debian:bullseye-slim
 
-# Instalar dependências
+# Evitar prompts interativos durante instalação (opcional, mas boa prática)
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Instalar dependências (ADICIONADO: ca-certificates e mailutils)
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
     procps \
     python3 \
     python3-pip \
+    ca-certificates \
+    mailutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar Node Exporter
