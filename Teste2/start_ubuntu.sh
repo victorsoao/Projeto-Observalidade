@@ -4,10 +4,10 @@
 # CONFIGURAÇÃO DE ALERTA (AJUSTADO)
 # ===============================================
 # 1. Alerta Discord (Webhook REAL)
-DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1422602406704971878/X_yKaEo-eytcDJfNwMIP0eCooPjZYiZDApV20eMR7AKOrcX_uN2fcbEfSRsS23Ne0C2S"
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1422602417911894197/-WIVgGuvVJ3YnluYWjAufZnyJVxtOXgzxln1sJ_8g9hTFCIrqIsHIulkeoYkBFMfeFIv"
 
 # 2. Alerta Email (Configuração REAL - Usado apenas se ativado)
-RECIPIENT_EMAIL="victorsoao777@gmail.com"
+RECIPIENT_EMAIL="EMAIL"
 
 # ===============================================
 

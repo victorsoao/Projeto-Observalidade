@@ -16,6 +16,6 @@ receivers:
     
     # Configuração de Webhook para Discord
     webhook_configs:
-      - url: 'https://discord.com/api/webhooks/1422602406704971878/X_yKaEo-eytcDJfNwMIP0eCooPjZYiZDApV20eMR7AKOrcX_uN2fcbEfSRsS23Ne0C2S'
+      - url: 'https://discord.com/api/webhooks/1422602417911894197/-WIVgGuvVJ3YnluYWjAufZnyJVxtOXgzxln1sJ_8g9hTFCIrqIsHIulkeoYkBFMfeFIv'
         send_resolved: true # Envia notificação quando o alerta for resolvido
-        max_alerts: 0 # Sem limite de alertas por webhook
+        max_alerts: 10 # Sem limite de alertas por webhook
