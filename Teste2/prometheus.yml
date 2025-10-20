@@ -1,5 +1,21 @@
 global:
-  scrape_interval: 15s # Raspar as métricas a cada 15 segundos
+  # Ajustado para um intervalo um pouco menor para melhor detecção de falha
+  scrape_interval: 10s 
+  
+  # Adicionar o Alertmanager como a camada de alerta
+  external_labels:
+    monitor: 'docker-monitor'
+
+# Configuração do Alertmanager para o Prometheus enviar os alertas
+alerting:
+  alertmanagers:
+    - static_configs:
+        # Aponta para o nome do serviço 'alertmanager' no docker-compose
+        - targets: ['alertmanager:9093']
+
+# Carregar o arquivo de regras de alerta
+rule_files:
+  - "/etc/prometheus/alerting_rules.yml"
 
 scrape_configs:
   - job_name: 'prometheus'
@@ -16,18 +32,28 @@ scrape_configs:
 
   - job_name: 'ubuntu'
     static_configs:
-
+      # Usando o IP fixo conforme sua configuração
       - targets: ['172.28.0.20:9100']
       
   - job_name: 'debian'
     static_configs:
+      # Usando o IP fixo conforme sua configuração
       - targets: ['172.28.0.10:9100']
 
   # Adicionar OpenTelemetry Collector como fonte de métricas
   - job_name: 'otel-collector'
     static_configs:
-      - targets: ['172.28.0.40:8889'] # <--- MODIFICADO
+      # Usando o IP fixo conforme sua configuração
+      - targets: ['172.28.0.40:8889'] 
     scrape_interval: 10s
+
+  # NOVO: Adicionar o Grafana para coletar as métricas internas (Porta Padrão: 3000)
+  - job_name: 'grafana'
+    static_configs:
+      # O nome do serviço 'grafana' e a porta padrão para a UI e métricas
+      - targets: ['grafana:3000'] 
+    metrics_path: '/metrics' # Caminho padrão para métricas do Grafana
+    scrape_interval: 15s
 
   # Jaeger metrics (se disponível)
   - job_name: 'jaeger'

@@ -16,7 +16,8 @@ services:
       - "13133:13133" # health check
     networks:
       monitoramento_rede:
-        ipv4_address: 172.28.0.40 # <--- NOVO IP FIXO DO COLLECTOR
+        # Usando o IP original do seu arquivo, mas recomendando usar o nome do serviço
+        ipv4_address: 172.28.0.40 
     restart: unless-stopped
 
   # Jaeger para tracing
@@ -37,47 +38,72 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      # Monta o arquivo de regras de alerta
+      - ./alerting_rules.yml:/etc/prometheus/alerting_rules.yml 
     ports:
       - '9090:9090'
     networks:
       - monitoramento_rede
-
-  grafana:
-    image: grafana/grafana:7.3.7
-    container_name: grafana
-    ports:
-      - '3000:3000'
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    depends_on:
+      - alertmanager 
+      - otel-collector
+    restart: unless-stopped
+    
+  # Serviço Alertmanager
+  alertmanager:
+    image: prom/alertmanager:v0.22.2
+    container_name: alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    ports:
+      - '9093:9093' # Porta da UI e API do Alertmanager
     networks:
       - monitoramento_rede
+    restart: unless-stopped
+    
+  # NOVO: Serviço Grafana para Visualização
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    # Mapeamento para a porta padrão da UI: Host 3000 -> Container 3000
+    ports:
+      - '3000:3000' 
+    volumes:
+      # Volume para persistir configurações e dashboards
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - monitoramento_rede
+    depends_on:
+      - prometheus
+      - jaeger
+    restart: unless-stopped
 
+  # cAdvisor (monitoramento de recursos do Docker)
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
       - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
+      - /var/lib/docker:/var/lib/docker:ro
     ports:
       - '8080:8080'
     restart: unless-stopped
     networks:
       - monitoramento_rede
 
+  # Node Exporter para monitoramento do Host
   node-exporter:
     image: prom/node-exporter:v1.7.0
     container_name: node-exporter
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
-      - /:/host/rootfs:ro
-    ports:
-      - '9100:9100'
+      - /:/rootfs:ro
     command:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
@@ -95,7 +121,8 @@ services:
     ports:
       - '9101:9100'
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://172.28.0.40:4318 # <--- MODIFICADO
+      # Usando o nome do serviço 'otel-collector' no lugar do IP, mas mantendo o IP original
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://172.28.0.40:4318 
       - OTEL_SERVICE_NAME=debian-service
       - OTEL_SERVICE_VERSION=1.0.0
       - OTEL_RESOURCE_ATTRIBUTES=service.name=debian-service,service.version=1.0.0,deployment.environment=production
@@ -115,7 +142,8 @@ services:
     ports:
       - '9102:9100'
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://172.28.0.40:4318 # <--- MODIFICADO
+      # Usando o nome do serviço 'otel-collector' no lugar do IP, mas mantendo o IP original
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://172.28.0.40:4318 
       - OTEL_SERVICE_NAME=ubuntu-service
       - OTEL_SERVICE_VERSION=1.0.0
       - OTEL_RESOURCE_ATTRIBUTES=service.name=ubuntu-service,service.version=1.0.0,deployment.environment=production
@@ -125,9 +153,15 @@ services:
         ipv4_address: 172.28.0.20
     depends_on:
       - otel-collector
-      
+
+# Volumes para persistência de dados
+volumes:
+  grafana-storage: {} # Volume criado para persistir os dados do Grafana
+
+# Redes
 networks:
   monitoramento_rede:
+    name: monitoramento_rede
     driver: bridge
     ipam:
       config:

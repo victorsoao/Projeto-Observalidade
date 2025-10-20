@@ -1,0 +1,39 @@
+groups:
+- name: ContainerAvailability
+  rules:
+  
+  # ===============================================
+  # 1. ALERTA PARA CONTÊINER DEBIAN
+  # ===============================================
+  - alert: DebianCriticoInativo
+    # Monitora o job 'debian' configurado no prometheus.yml
+    expr: up{job="debian"} == 0
+    # Espera 1 minuto para confirmar a indisponibilidade
+    for: 1m
+    labels:
+      severity: critical
+      # Roteia para o receiver padrão (Discord)
+      receiver: standard_notifications
+      # Rótulo de serviço explícito para agrupar no Alertmanager
+      service_name: "debian" 
+    annotations:
+      summary: "🔴 FALHA CRÍTICA: Contêiner DEBIAN está Inativo"
+      description: "O serviço de coleta de métricas (Node Exporter) do contêiner **DEBIAN** parou de responder. O contêiner pode ter parado ou o Node Exporter interno foi interrompido. Instância: {{ $labels.instance }}"
+  
+  # ===============================================
+  # 2. ALERTA PARA CONTÊINER UBUNTU
+  # ===============================================
+  - alert: UbuntuCriticoInativo
+    # Monitora o job 'ubuntu' configurado no prometheus.yml
+    expr: up{job="ubuntu"} == 0
+    # Espera 1 minuto para confirmar a indisponibilidade
+    for: 1m
+    labels:
+      severity: critical
+      # Roteia para o receiver padrão (Discord)
+      receiver: standard_notifications
+      # Rótulo de serviço explícito para agrupar no Alertmanager
+      service_name: "ubuntu" 
+    annotations:
+      summary: "🔴 FALHA CRÍTICA: Contêiner UBUNTU está Inativo"
+      description: "O serviço de coleta de métricas (Node Exporter) do contêiner **UBUNTU** parou de responder. O contêiner pode ter parado ou o Node Exporter interno foi interrompido. Instância: {{ $labels.instance }}"

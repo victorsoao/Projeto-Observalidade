@@ -1,0 +1,21 @@
+global:
+  # A seção global está vazia, pois não há mais dependência de SMTP/E-mail.
+
+route:
+  receiver: 'standard_notifications'
+  # Agrupamento mantido para evitar spam de múltiplos contêineres que caem juntos
+  group_by: ['alertname', 'service_name']
+  group_wait: 30s
+  group_interval: 5m
+  # CORREÇÃO: Reduzido para 5 minutos. Garante nova notificação rápida se o alerta se repetir.
+  repeat_interval: 5m
+  
+receivers:
+  # Receiver padrão: SOMENTE a configuração do Discord
+  - name: 'standard_notifications'
+    
+    # Configuração de Webhook para Discord
+    webhook_configs:
+      - url: 'https://discord.com/api/webhooks/1422602406704971878/X_yKaEo-eytcDJfNwMIP0eCooPjZYiZDApV20eMR7AKOrcX_uN2fcbEfSRsS23Ne0C2S'
+        send_resolved: true # Envia notificação quando o alerta for resolvido
+        max_alerts: 0 # Sem limite de alertas por webhook
