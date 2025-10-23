@@ -6,8 +6,6 @@
 # 1. Alerta Discord (Webhook REAL)
 DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1422602417911894197/-WIVgGuvVJ3YnluYWjAufZnyJVxtOXgzxln1sJ_8g9hTFCIrqIsHIulkeoYkBFMfeFIv"
 
-# 2. Alerta Email (Configuração REAL - Usado apenas se ativado)
-RECIPIENT_EMAIL="EMAIL"
 
 # ===============================================
 

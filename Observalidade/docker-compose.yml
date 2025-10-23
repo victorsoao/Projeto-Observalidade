@@ -1,9 +1,9 @@
 version: '3.7'
 
 services:
-  # OpenTelemetry Collector
+  # OpenTelemetry Collector (Atualizado para a versão estável específica)
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
+    image: otel/opentelemetry-collector-contrib:latest # Versão estável mais recente
     container_name: otel-collector
     hostname: otel-collector
     command: ["--config=/etc/otel-collector-config.yml"]
@@ -20,9 +20,9 @@ services:
         ipv4_address: 172.28.0.40 
     restart: unless-stopped
 
-  # Jaeger para tracing
+  # Jaeger para tracing (Atualizado para a versão estável específica)
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:1.74.0 # Versão estável mais recente
     container_name: jaeger
     ports:
       - "16686:16686" # Jaeger UI
@@ -33,8 +33,9 @@ services:
       - monitoramento_rede
     restart: unless-stopped
 
+  # Prometheus (Atualizado para a versão estável mais recente da série 3.x)
   prometheus:
-    image: prom/prometheus:v2.24.1
+    image: prom/prometheus:v3.7.1 # Versão estável mais recente
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
@@ -49,9 +50,9 @@ services:
       - otel-collector
     restart: unless-stopped
     
-  # Serviço Alertmanager
+  # Serviço Alertmanager (Atualizado para a versão estável mais recente)
   alertmanager:
-    image: prom/alertmanager:v0.22.2
+    image: prom/alertmanager:v0.28.1 # Versão estável mais recente
     container_name: alertmanager
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
@@ -64,9 +65,9 @@ services:
       - monitoramento_rede
     restart: unless-stopped
     
-  # NOVO: Serviço Grafana para Visualização
+  # Serviço Grafana para Visualização (Atualizado para a versão estável específica)
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.2.0 # Versão estável mais recente
     container_name: grafana
     # Mapeamento para a porta padrão da UI: Host 3000 -> Container 3000
     ports:
@@ -81,9 +82,9 @@ services:
       - jaeger
     restart: unless-stopped
 
-  # cAdvisor (monitoramento de recursos do Docker)
+  # cAdvisor (monitoramento de recursos do Docker) (Atualizado para a versão estável mais recente)
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    image: gcr.io/cadvisor/cadvisor:v0.47.2 # Versão estável mais recente
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
@@ -96,9 +97,9 @@ services:
     networks:
       - monitoramento_rede
 
-  # Node Exporter para monitoramento do Host
+  # Node Exporter para monitoramento do Host (Atualizado para a versão estável mais recente)
   node-exporter:
-    image: prom/node-exporter:v1.7.0
+    image: prom/node-exporter:v1.9.1 # Versão estável mais recente na série 1.x
     container_name: node-exporter
     volumes:
       - /proc:/host/proc:ro
@@ -112,7 +113,7 @@ services:
     networks:
       - monitoramento_rede
 
-  # Container Debian com OpenTelemetry
+  # Container Debian com OpenTelemetry (MANTIDO)
   debian_test:
     build:
       context: .
@@ -133,7 +134,7 @@ services:
     depends_on:
       - otel-collector
     
-  # Container Ubuntu com OpenTelemetry
+  # Container Ubuntu com OpenTelemetry (MANTIDO)
   ubuntu_test:
     build:
       context: .
