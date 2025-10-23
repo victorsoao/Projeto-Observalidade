@@ -7,8 +7,8 @@ route:
   group_by: ['alertname', 'service_name']
   group_wait: 30s
   group_interval: 5m
-  # CORREÇÃO: Reduzido para 5 minutos. Garante nova notificação rápida se o alerta se repetir.
-  repeat_interval: 5m
+  # CORREÇÃO: Reduzido para 1 minuto. Garante nova notificação rápida se o alerta se repetir.
+  repeat_interval: 1m
   
 receivers:
   # Receiver padrão: SOMENTE a configuração do Discord
@@ -18,4 +18,4 @@ receivers:
     webhook_configs:
       - url: 'https://discord.com/api/webhooks/1422602417911894197/-WIVgGuvVJ3YnluYWjAufZnyJVxtOXgzxln1sJ_8g9hTFCIrqIsHIulkeoYkBFMfeFIv'
         send_resolved: true # Envia notificação quando o alerta for resolvido
-        max_alerts: 10 # Sem limite de alertas por webhook
+        
