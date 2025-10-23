@@ -1,5 +1,3 @@
-version: '3.7'
-
 services:
   # OpenTelemetry Collector (Atualizado para a versão estável específica)
   otel-collector:
