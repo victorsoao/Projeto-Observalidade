@@ -1,21 +1,23 @@
 global:
-  # A seção global está vazia, pois não há mais dependência de SMTP/E-mail.
+  resolve_timeout: 5m
+
+templates:
+  - '/etc/alertmanager/*.tmpl'
 
 route:
-  receiver: 'standard_notifications'
-  # Agrupamento mantido para evitar spam de múltiplos contêineres que caem juntos
-  group_by: ['alertname', 'service_name']
+  receiver: 'discord-geral'
+  group_by: ['alertname', 'instance']
   group_wait: 30s
-  group_interval: 5m
-  # CORREÇÃO: Reduzido para 1 minuto. Garante nova notificação rápida se o alerta se repetir.
+  group_interval: 1m
   repeat_interval: 1m
-  
+
 receivers:
-  # Receiver padrão: SOMENTE a configuração do Discord
-  - name: 'standard_notifications'
-    
-    # Configuração de Webhook para Discord
-    webhook_configs:
-      - url: 'https://discord.com/api/webhooks/1422602417911894197/-WIVgGuvVJ3YnluYWjAufZnyJVxtOXgzxln1sJ_8g9hTFCIrqIsHIulkeoYkBFMfeFIv'
-        send_resolved: true # Envia notificação quando o alerta for resolvido
-        
+  - name: 'discord-geral'
+    discord_configs:
+      - webhook_url: 'https://discord.com/api/webhooks/1422602417911894197/-WIVgGuvVJ3YnluYWjAufZnyJVxtOXgzxln1sJ_8g9hTFCIrqIsHIulkeoYkBFMfeFIv'
+        send_resolved: true
+        title: '{{ template "alert_title" . }}'
+        message: '{{ template "discord.message" . }}'
+
+
+
